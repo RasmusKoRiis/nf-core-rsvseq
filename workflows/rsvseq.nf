@@ -50,7 +50,9 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
-include { ARTIC                       } from '../modules/local/artic/main'
+include { AMPLIGONE                   } from '../modules/local/ampligone/main'
+include { CHOPPER                     } from '../modules/local/chopper/main'
+include { IRMA                        } from '../modules/local/irma/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,29 +65,42 @@ def multiqc_report = []
 
 // Function to parse the sample sheet
 def parseSampleSheet(sampleSheetPath) {
-        return Channel
-            .fromPath(sampleSheetPath)
-            .splitCsv(header: true, sep: ',', strip: true)
-            .map { row ->
-                def sampleId = row.sample_id
-                def files = file("${params.samplesDir}/${row.barcode}/*.fastq.gz")
-                // Creating a metadata map
-                def meta = [ id: sampleId, single_end: true ]
-                return tuple(meta, files)
+    return Channel
+        .fromPath(sampleSheetPath)
+        .splitCsv(header: true, sep: ',', strip: true)
+        .map { row ->
+            // Use 'SequenceID' and 'Barcode' based on the sample sheet
+            if (!row.SequenceID || !row.Barcode) {
+                error "Missing 'SequenceID' or 'Barcode' in the sample sheet row: ${row}"
             }
+
+            // Use SequenceID as sample ID and Barcode to find files
+            def sampleId = row.SequenceID
+            def files = file("${params.samplesDir}/${row.Barcode}/*.fastq.gz")
+
+            // Check if there are any files in the list
+            if (!files || files.size() == 0) {
+                error "No FastQ files for sample ${sampleId} found in ${files}"
+            }
+
+            // Creating a metadata map
+            def meta = [ id: sampleId, single_end: true ]
+            return tuple(meta, files)
+        }
 }
 
 workflow RSVSEQ {
 
-    ch_versions = Channel.empty()
+    main:
 
-    //
-    // INPUT PARSE
-    //
+    def currentDir = System.getProperty('user.dir')
+    def primerdir = "${currentDir}/${params.primerdir}"
 
-    ch_sample_information = parseSampleSheet(params.input)
-    
+
+    ch_sample_information = parseSampleSheet(params.input) // Use params.input directly
     ch_versions = Channel.empty()
+    ch_multiqc_files = Channel.empty()
+ 
 
     ch_sample_information
         .map { meta, files ->
@@ -93,10 +108,10 @@ workflow RSVSEQ {
         }
     .set { read_input }
 
-    //
-    // MODULE: CAT_FASTQ
-    //
 
+    //
+    // MODULE: RUN CAT FASTQ
+    //
     CAT_FASTQ (
         read_input
     )
@@ -104,16 +119,30 @@ workflow RSVSEQ {
 
 
     //
-    // MODULE: ARTIC
+    // MODULE: CHOPPER
+    //  
+    
+    CHOPPER (
+        CAT_FASTQ.out.reads
+    )
+
+    //
+    // MODULE: AMPLIGONE.
+    // 
+    
+       
+
+    AMPLIGONE (
+        CHOPPER.out.chopperfastq, primerdir
+    )
+
+    
+    //
+    // MODULE: IRMA
     //
 
-    primer_scheme = params.primer_scheme
-    seq_summary = params.seq_summary
-
-    ARTIC (
-        CAT_FASTQ.out.reads,
-        primer_scheme,
-        seq_summary
+    IRMA (
+        AMPLIGONE.out.primertrimmedfastq
     )
 
 
