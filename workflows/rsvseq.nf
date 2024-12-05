@@ -131,9 +131,8 @@ workflow RSVSEQ {
     // 
     
        
-
     AMPLIGONE (
-        CHOPPER.out.chopperfastq, primerdir
+        CHOPPER.out.chopperfastq, Channel.value(file(params.primerdir))
     )
 
     
