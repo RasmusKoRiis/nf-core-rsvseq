@@ -1,5 +1,32 @@
-sample_id,barcode,type
-sample01,rsv01,rsvb
+PCR-PlatePosition,SequenceID,Barcode,KonsCt
+A1,1015712,barcode01,24.56
+A2,1015712,barcode02,24.56
+A3,1015712,barcode03,24.56
+A4,1015712,barcode04,24.56
+A5,1015712,barcode05,24.56
+A6,1015712,barcode06,24.56
+A7,1015712,barcode07,24.56
+A8,1015712,barcode08,24.56
+B1,1015712,barcode09,24.56
+B2,1015712,barcode10,24.56
+B3,1015712,barcode11,24.56
+B4,1015712,barcode12,24.56
+B5,1015712,barcode13,24.56
+B6,1015712,barcode14,24.56
+B7,1015712,barcode15,24.56
+B8,1015712,barcode16,24.56
+C1,1015712,barcode17,24.56
+C2,1015712,barcode18,24.56
+C3,1015712,barcode19,24.56
+C4,1015712,barcode20,24.56
+C5,1015712,barcode21,24.56
+C6,1015712,barcode22,24.56
+C7,1015712,barcode23,24.56
+C8,1015712,barcode24,24.56
+
+
+
+
 
 
 
