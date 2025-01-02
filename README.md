@@ -62,8 +62,6 @@ Ensure your directory structure is as follows:
 
 Navigate to the `nf-core-rsv` folder and execute the following command with default parameters:
 
-#### SARS-CoV-2 FASTQ analysis
-
 ```bash
 nextflow run main.nf -profile docker --runid runid_name   --input samplesheet.csv --outdir ../outdir_name
 ```
