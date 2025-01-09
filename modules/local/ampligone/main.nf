@@ -17,12 +17,21 @@ process AMPLIGONE {
 
     script:
     """
+    # Check if meta.id contains "A" or "B"
+    if [[ "$meta_id" == *A* ]]; then
+        var="a"
+    elif [[ "$meta_id" == *B* ]]; then
+        var="b"
+    else
+        echo "meta.id does not contain 'A' or 'B'. Exiting."
+        exit 1
+    fi
 
     ampligone \
         --input $fastq\
         --output ${meta.id}.fastq \
-        --reference $primerdir/reference.fasta \
-        --primers $primerdir/primer.fasta \
+        --reference $primerdir/${var}/reference.fasta \
+        --primers $primerdir/${var}/primer.fasta \
         --export-primers ${meta.id}_removed_coordinates.bed \
         --amplicon-type end-to-end
     """
