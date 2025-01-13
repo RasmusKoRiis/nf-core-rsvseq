@@ -1,7 +1,7 @@
 process NEXTCLADE {
     tag "${meta.id}"
     label 'process_single'
-    errorStrategy 'ignore'
+    //errorStrategy 'ignore'
     
     container 'docker.io/nextstrain/nextclade:latest'
     containerOptions = "-v ${baseDir}/bin:/project-bin" // Mount the bin directory
@@ -13,6 +13,7 @@ process NEXTCLADE {
 
     output:
     tuple val(meta), path("*nextclade.csv"), emit: nextclade_csv, optional: true
+    path("*nextclade.csv"), emit: report_nextclade_csv, optional: true
 
 
     when:
@@ -21,8 +22,18 @@ process NEXTCLADE {
 
     script:
     """
-    
-    nextclade dataset get --name 'nextstrain/sars-cov-2/wuhan-hu-1/orfs' --output-dir "${meta.id}_whuan_nextclade_dataset/"
+
+    # Check if meta.id contains "A" or "B"
+    if [[ ${meta.id} == *A* ]]; then
+        var="nextstrain/rsv/a/EPI_ISL_412866"
+    elif [[ ${meta.id} == *B* ]]; then
+        var="nextstrain/rsv/b/EPI_ISL_1653999"
+    else
+        echo "meta.id does not contain 'A' or 'B'. Exiting."
+        exit 1
+    fi
+
+    nextclade dataset get --name "\$var" --output-dir "${meta.id}_whuan_nextclade_dataset/"
 
     nextclade run \
         --input-dataset ${meta.id}_whuan_nextclade_dataset/ \

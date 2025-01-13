@@ -53,6 +53,9 @@ include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
 include { AMPLIGONE                   } from '../modules/local/ampligone/main'
 include { CHOPPER                     } from '../modules/local/chopper/main'
 include { IRMA                        } from '../modules/local/irma/main'
+include { NEXTCLADE                   } from '../modules/local/nextclade/main'
+include { CSV_CONVERSION              } from '../modules/local/csv_conversion/main'
+include { REPORT                      } from '../modules/local/report/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,6 +65,7 @@ include { IRMA                        } from '../modules/local/irma/main'
 
 // Info required for completion email and summary
 def multiqc_report = []
+
 
 // Function to parse the sample sheet
 def parseSampleSheet(sampleSheetPath) {
@@ -80,13 +84,15 @@ def parseSampleSheet(sampleSheetPath) {
 
             // Check if there are any files in the list
             if (!files || files.size() == 0) {
-                error "No FastQ files for sample ${sampleId} found in ${files}"
+                log.warn "Skipping sample ${sampleId}: No FASTQ files found in ${files}"
+                return null // Return null to allow filtering out later
             }
 
             // Creating a metadata map
             def meta = [ id: sampleId, single_end: true ]
             return tuple(meta, files)
         }
+        .filter { it != null } // Remove null entries (samples with no FASTQ files)
 }
 
 workflow RSVSEQ {
@@ -142,6 +148,42 @@ workflow RSVSEQ {
 
     IRMA (
         AMPLIGONE.out.primertrimmedfastq
+    )
+
+
+    //
+    // MODULE: NEXTCLADE
+    //
+
+    NEXTCLADE (
+        IRMA.out.amended_consensus
+    )
+
+    //
+    // MODULE: NEXTCLADE CONVERSION
+    //
+
+    CSV_CONVERSION (
+        NEXTCLADE.out.nextclade_csv
+    )
+
+ 
+    //
+    // MODULE:REPORT
+    //
+
+    def runid            = params.runid
+    def seq_instrument   = params.seq_instrument
+    def release_version  = params.release_version
+
+
+    REPORT (
+        CSV_CONVERSION.out.nextclade_stats_report.collect(),
+        CSV_CONVERSION.out.nextclade_mutations_report.collect(),
+        runid,
+        release_version,
+        seq_instrument,
+        file(params.input) 
     )
 
 
