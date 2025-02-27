@@ -1,7 +1,7 @@
 process AMPLIGONE {
     tag "$meta.id"
     label 'process_medium'
-    //errorStrategy 'ignore'
+    errorStrategy 'ignore'
 
     container 'quay.io/biocontainers/ampligone:1.3.1--pyhdfd78af_0'
 
