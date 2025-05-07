@@ -125,21 +125,23 @@ workflow RSVSEQ {
 
 
     //
-    // MODULE: CHOPPER
-    //  
-    
-    CHOPPER (
-        CAT_FASTQ.out.reads
-    )
-
-    //
     // MODULE: AMPLIGONE.
     // 
     
        
     AMPLIGONE (
-        CHOPPER.out.chopperfastq, Channel.value(file(params.primerdir))
+        CAT_FASTQ.out.reads, Channel.value(file(params.primerdir))
     )
+
+
+    //
+    // MODULE: CHOPPER
+    //  
+    
+    CHOPPER (
+        AMPLIGONE.out.primertrimmedfastq
+    )
+
 
     
     //
@@ -147,7 +149,7 @@ workflow RSVSEQ {
     //
 
     IRMA (
-        AMPLIGONE.out.primertrimmedfastq
+        CHOPPER.out.chopperfastq
     )
 
 
