@@ -185,7 +185,8 @@ workflow RSVSEQ {
         runid,
         release_version,
         seq_instrument,
-        file(params.input) 
+        file(params.input),
+        IRMA.out.fasta_report.collect()
     )
 
 
