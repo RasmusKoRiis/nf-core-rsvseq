@@ -24,12 +24,12 @@ process IRMA {
 
     output:
     tuple val(meta), path("$meta.id/*.fasta") , emit: fasta
-    path("$meta.id/*.fasta") , emit: fasta_report
     tuple val(meta), path("$meta.id/*.bam"),  path("$meta.id/*.bai"), emit: bam
     tuple val(meta), path("$meta.id/*.vcf") , emit: vcf
     tuple val(meta), path("$meta.id/tables/READ_COUNTS.txt") , emit: read_count
     tuple val(meta), path("$meta.id/figures/*.pdf") , emit: figures
     tuple val(meta), path("$meta.id/amended_consensus/${meta.id}.fa") , emit: amended_consensus
+    tuple val(meta), path("$meta.id/amended_consensus/${meta.id}.fa") , emit: fasta_report
     tuple val(meta), path("$meta.id/secondary") , emit: secondary
   
 
@@ -39,5 +39,8 @@ process IRMA {
     script:
     """
     IRMA RSV-minion $fastq ${meta.id}
+
+    #Renaming 
+
     """
 }
