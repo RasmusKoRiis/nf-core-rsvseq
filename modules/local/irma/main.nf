@@ -29,7 +29,7 @@ process IRMA {
     tuple val(meta), path("$meta.id/tables/READ_COUNTS.txt") , emit: read_count
     tuple val(meta), path("$meta.id/figures/*.pdf") , emit: figures
     tuple val(meta), path("$meta.id/amended_consensus/${meta.id}.fa") , emit: amended_consensus
-    tuple val(meta), path("$meta.id/amended_consensus/${meta.id}.fa") , emit: fasta_report
+    path("$meta.id/amended_consensus/${meta.id}.fa") , emit: fasta_report
     tuple val(meta), path("$meta.id/secondary") , emit: secondary
   
 
