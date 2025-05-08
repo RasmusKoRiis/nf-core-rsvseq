@@ -19,6 +19,7 @@ process REPORT {
     
     output:
     path("${runid}.csv"), emit: report
+    path("${runid}.fasta"), emit: multiple_fasta
 
 
 
