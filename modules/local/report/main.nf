@@ -52,7 +52,7 @@ process REPORT {
     awk -v version="${release_version}" -v OFS=',' '{ if (NR == 1) { print \$0, "Release Version" } else { print \$0, version } }' ${runid}_temp3.csv > ${runid}.csv
 
     #Concat FASTA-files to multiple file
-    cat *fasta > ${runid}.fasta
+    cat *.fa > ${runid}.fasta
 
 
 
