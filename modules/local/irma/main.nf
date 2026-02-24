@@ -20,6 +20,7 @@ process IRMA {
 
     input:
     tuple val(meta), path(fastq)
+    path irma_external_config
    
 
     output:
@@ -38,9 +39,9 @@ process IRMA {
 
     script:
     """
-    IRMA RSV-minion $fastq ${meta.id}
+    IRMA RSV-minion --external-config ${irma_external_config} $fastq ${meta.id}
 
-    #Renaming 
+    #Renaming
 
     """
 }

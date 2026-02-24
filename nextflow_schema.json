@@ -224,6 +224,13 @@
                     "description": "Custom MultiQC yaml file containing HTML including a methods description.",
                     "fa_icon": "fas fa-cog"
                 },
+                "irma_external_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "External IRMA config file passed to the IRMA module with --external-config.",
+                    "fa_icon": "fas fa-cog",
+                    "hidden": true
+                },
                 "validate_params": {
                     "type": "boolean",
                     "description": "Boolean whether to validate parameters against the schema at runtime",

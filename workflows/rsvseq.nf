@@ -104,6 +104,7 @@ workflow RSVSEQ {
 
 
     ch_sample_information = parseSampleSheet(params.input) // Use params.input directly
+    ch_irma_external_config = Channel.value(file(params.irma_external_config, checkIfExists: true))
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
  
@@ -149,7 +150,8 @@ workflow RSVSEQ {
     //
 
     IRMA (
-        CHOPPER.out.chopperfastq
+        CHOPPER.out.chopperfastq,
+        ch_irma_external_config
     )
 
 
