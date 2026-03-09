@@ -70,8 +70,40 @@ nextflow run main.nf -profile docker --runid runid_name   --input samplesheet.cs
 
 - `--input` (default: `assets/samplesheet.csv`): Path to the samplesheet.
 - `--samplesDir` (default: `../data`): Directory containing the FASTQ files in the structure given above.
+- `--primerdir` (default: `assets/primer/`): Legacy primer layout used when no primer scheme is set.
+- `--primer_schemes_dir` (default: `assets/primer_schemes/`): Root directory for versioned primer schemes.
+- `--primer_scheme` (default: `null`): Version folder name under `assets/primer_schemes/RSVA|RSVB/` (for example `V1`, `V2`).
 
 All parameters are detailed in the `nextflow.config` file.
+
+### Primer Scheme Selection
+
+If `--primer_scheme` is not set, the pipeline uses:
+
+- `assets/primer/a/reference.fasta`
+- `assets/primer/a/primer.fasta`
+- `assets/primer/b/reference.fasta`
+- `assets/primer/b/primer.fasta`
+
+If `--primer_scheme` is set, the pipeline uses:
+
+- `assets/primer_schemes/RSVA/<SCHEME>/...`
+- `assets/primer_schemes/RSVB/<SCHEME>/...`
+
+Supported file names inside each scheme folder are:
+
+- `reference.fasta` or `RSVA.reference.fasta` / `RSVB.reference.fasta`
+- `primer.fasta` or `RSVA.primer.fasta` / `RSVB.primer.fasta`
+- If FASTA is missing, the pipeline will generate it automatically from `primer.bed` / `RSVA.primer.bed` / `RSVB.primer.bed` plus the reference FASTA.
+
+Example:
+
+```bash
+nextflow run main.nf -profile docker \
+  --input samplesheet.csv \
+  --outdir ../outdir_name \
+  --primer_scheme V1
+```
 
 ## Pipeline Output
 
@@ -87,4 +119,3 @@ The output includes:
 ## Credits
 
 rsvseq was originally written by Rasmus Kopperud Riis.
-

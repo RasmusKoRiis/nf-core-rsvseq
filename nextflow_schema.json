@@ -284,6 +284,18 @@
             "type": "string",
             "default": "https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/genome/NC_045512.2/GCF_009858895.2_ASM985889v3_genomic.200409.fna.gz"
         },
+        "primerdir": {
+            "type": "string",
+            "default": "assets/primer/"
+        },
+        "primer_schemes_dir": {
+            "type": "string",
+            "default": "assets/primer_schemes/"
+        },
+        "primer_scheme": {
+            "type": ["string", "null"],
+            "default": null
+        },
         "samplesDir": {
             "type": "string",
             "default": "../data"

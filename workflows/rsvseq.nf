@@ -99,10 +99,6 @@ workflow RSVSEQ {
 
     main:
 
-    def currentDir = System.getProperty('user.dir')
-    def primerdir = "${currentDir}/${params.primerdir}"
-
-
     ch_sample_information = parseSampleSheet(params.input) // Use params.input directly
     ch_irma_external_config = Channel.value(file(params.irma_external_config, checkIfExists: true))
     ch_versions = Channel.empty()
@@ -131,7 +127,10 @@ workflow RSVSEQ {
     
        
     AMPLIGONE (
-        CAT_FASTQ.out.reads, Channel.value(file(params.primerdir))
+        CAT_FASTQ.out.reads,
+        Channel.value(file(params.primerdir, checkIfExists: true)),
+        Channel.value(file(params.primer_schemes_dir, checkIfExists: true)),
+        Channel.value(params.primer_scheme)
     )
 
 
