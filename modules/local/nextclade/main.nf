@@ -20,19 +20,20 @@ process NEXTCLADE {
     task.ext.when == null || task.ext.when
 
 
-    script:
-    """
+    shell:
+    '''
     set -euo pipefail
 
-    sample_id="${meta.id}"
-    sample_subtype="${meta.subtype ?: ''}"
+    sample_id="!{meta.id}"
+    sample_subtype="!{meta.subtype ?: ''}"
+    fasta="!{fasta}"
 
     dataset_candidates=()
     label_candidates=()
-    if [[ "\$sample_subtype" == "RSVA" ]]; then
+    if [[ "$sample_subtype" == "RSVA" ]]; then
         dataset_candidates=("nextstrain/rsv/a/EPI_ISL_412866" "nextstrain/rsv/b/EPI_ISL_1653999")
         label_candidates=("RSVA" "RSVB")
-    elif [[ "\$sample_subtype" == "RSVB" ]]; then
+    elif [[ "$sample_subtype" == "RSVB" ]]; then
         dataset_candidates=("nextstrain/rsv/b/EPI_ISL_1653999" "nextstrain/rsv/a/EPI_ISL_412866")
         label_candidates=("RSVB" "RSVA")
     elif [[ "$sample_id" == *A* ]]; then
@@ -48,48 +49,48 @@ process NEXTCLADE {
 
     success=0
     last_err=""
-    for idx in "\${!dataset_candidates[@]}"; do
-        dataset_name="\${dataset_candidates[\$idx]}"
-        subtype_label="\${label_candidates[\$idx]}"
-        ds_dir="\${sample_id}_nextclade_dataset_\${subtype_label}"
-        out_dir="\${sample_id}_nextclade_output_\${subtype_label}"
+    for idx in "${!dataset_candidates[@]}"; do
+        dataset_name="${dataset_candidates[$idx]}"
+        subtype_label="${label_candidates[$idx]}"
+        ds_dir="${sample_id}_nextclade_dataset_${subtype_label}"
+        out_dir="${sample_id}_nextclade_output_${subtype_label}"
 
-        rm -rf "\$ds_dir" "\$out_dir"
+        rm -rf "$ds_dir" "$out_dir"
 
-        if ! nextclade dataset get --name "\$dataset_name" --output-dir "\$ds_dir"; then
-            last_err="Failed dataset download for \$dataset_name"
+        if ! nextclade dataset get --name "$dataset_name" --output-dir "$ds_dir"; then
+            last_err="Failed dataset download for $dataset_name"
             continue
         fi
 
         if ! nextclade run \
-            --input-dataset "\$ds_dir" \
-            --output-all="\$out_dir" \
-            $fasta; then
-            last_err="Nextclade run failed for \$dataset_name"
+            --input-dataset "$ds_dir" \
+            --output-all="$out_dir" \
+            "$fasta"; then
+            last_err="Nextclade run failed for $dataset_name"
             continue
         fi
 
-        if compgen -G "\$out_dir/*" > /dev/null; then
-            for file in "\$out_dir"/*; do
-                base=\$(basename "\$file")
-                mv "\$file" "./\${sample_id}_\${base}"
+        if compgen -G "$out_dir/*" > /dev/null; then
+            for file in "$out_dir"/*; do
+                base=$(basename "$file")
+                mv "$file" "./${sample_id}_${base}"
             done
             success=1
             break
         else
-            last_err="No output files produced for \$dataset_name"
+            last_err="No output files produced for $dataset_name"
         fi
     done
 
-    if [[ "\$success" -ne 1 ]]; then
-        echo "\${last_err:-All Nextclade attempts failed}"
+    if [[ "$success" -ne 1 ]]; then
+        echo "${last_err:-All Nextclade attempts failed}"
         exit 1
     fi
 
     cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
+    "NEXTCLADE":
+        nextclade: $(nextclade --version 2>&1 | head -n1)
     END_VERSIONS
 
-    """
+    '''
 }
