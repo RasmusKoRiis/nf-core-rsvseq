@@ -22,37 +22,69 @@ process NEXTCLADE {
 
     script:
     """
+    set -euo pipefail
 
-    # Check if meta.id contains "A" or "B"
-    if [[ ${meta.id} == *A* ]]; then
-        var="nextstrain/rsv/a/EPI_ISL_412866"
-    elif [[ ${meta.id} == *B* ]]; then
-        var="nextstrain/rsv/b/EPI_ISL_1653999"
+    sample_id="${meta.id}"
+    sample_subtype="${meta.subtype ?: ''}"
+
+    dataset_candidates=()
+    label_candidates=()
+    if [[ "\$sample_subtype" == "RSVA" ]]; then
+        dataset_candidates=("nextstrain/rsv/a/EPI_ISL_412866" "nextstrain/rsv/b/EPI_ISL_1653999")
+        label_candidates=("RSVA" "RSVB")
+    elif [[ "\$sample_subtype" == "RSVB" ]]; then
+        dataset_candidates=("nextstrain/rsv/b/EPI_ISL_1653999" "nextstrain/rsv/a/EPI_ISL_412866")
+        label_candidates=("RSVB" "RSVA")
+    elif [[ "$sample_id" == *A* ]]; then
+        dataset_candidates=("nextstrain/rsv/a/EPI_ISL_412866")
+        label_candidates=("RSVA")
+    elif [[ "$sample_id" == *B* ]]; then
+        dataset_candidates=("nextstrain/rsv/b/EPI_ISL_1653999")
+        label_candidates=("RSVB")
     else
-        echo "meta.id does not contain 'A' or 'B'. Exiting."
+        dataset_candidates=("nextstrain/rsv/a/EPI_ISL_412866" "nextstrain/rsv/b/EPI_ISL_1653999")
+        label_candidates=("RSVA" "RSVB")
+    fi
+
+    success=0
+    last_err=""
+    for idx in "\${!dataset_candidates[@]}"; do
+        dataset_name="\${dataset_candidates[\$idx]}"
+        subtype_label="\${label_candidates[\$idx]}"
+        ds_dir="\${sample_id}_nextclade_dataset_\${subtype_label}"
+        out_dir="\${sample_id}_nextclade_output_\${subtype_label}"
+
+        rm -rf "\$ds_dir" "\$out_dir"
+
+        if ! nextclade dataset get --name "\$dataset_name" --output-dir "\$ds_dir"; then
+            last_err="Failed dataset download for \$dataset_name"
+            continue
+        fi
+
+        if ! nextclade run \
+            --input-dataset "\$ds_dir" \
+            --output-all="\$out_dir" \
+            $fasta; then
+            last_err="Nextclade run failed for \$dataset_name"
+            continue
+        fi
+
+        if compgen -G "\$out_dir/*" > /dev/null; then
+            for file in "\$out_dir"/*; do
+                base=\$(basename "\$file")
+                mv "\$file" "./\${sample_id}_\${base}"
+            done
+            success=1
+            break
+        else
+            last_err="No output files produced for \$dataset_name"
+        fi
+    done
+
+    if [[ "\$success" -ne 1 ]]; then
+        echo "\${last_err:-All Nextclade attempts failed}"
         exit 1
     fi
-
-    nextclade dataset get --name "\$var" --output-dir "${meta.id}_whuan_nextclade_dataset/"
-
-    nextclade run \
-        --input-dataset ${meta.id}_whuan_nextclade_dataset/ \
-        --output-all=${meta.id}_whuan_nextclade_output/ \
-        $fasta
-
-    if compgen -G "${meta.id}_whuan_nextclade_output/*" > /dev/null; then
-        for file in ${meta.id}_whuan_nextclade_output/*; do
-            cat "\$file"
-            basename=\$(basename \$file)
-            if [[ "\$file" == *.csv ]]; then
-                mv "\$file" ./${meta.id}_\$basename
-            else
-                mv "\$file" ./${meta.id}_\$basename
-            fi
-        done
-    fi
-
-    
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
