@@ -50,6 +50,7 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
+include { RSV_SUBTYPE                 } from '../modules/local/rsv_subtype/main'
 include { AMPLIGONE                   } from '../modules/local/ampligone/main'
 include { CHOPPER                     } from '../modules/local/chopper/main'
 include { IRMA                        } from '../modules/local/irma/main'
@@ -120,14 +121,26 @@ workflow RSVSEQ {
     )
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first())
 
+    //
+    // MODULE: RSV SUBTYPE INFERENCE
+    //
+    RSV_SUBTYPE (
+        CAT_FASTQ.out.reads,
+        Channel.value(file(params.primerdir, checkIfExists: true)),
+        Channel.value(file(params.primer_schemes_dir, checkIfExists: true)),
+        Channel.value(params.primer_scheme)
+    )
+
+    ch_reads_with_subtype = RSV_SUBTYPE.out.typed_fastq
+        .map { meta, fastq, subtype ->
+            tuple(meta + [subtype: subtype], fastq)
+        }
 
     //
     // MODULE: AMPLIGONE.
-    // 
-    
-       
+    //
     AMPLIGONE (
-        CAT_FASTQ.out.reads,
+        ch_reads_with_subtype,
         Channel.value(file(params.primerdir, checkIfExists: true)),
         Channel.value(file(params.primer_schemes_dir, checkIfExists: true)),
         Channel.value(params.primer_scheme)
