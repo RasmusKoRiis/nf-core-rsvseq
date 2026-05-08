@@ -51,6 +51,13 @@ process AMPLIGONE {
         primer_scheme_value=""
     fi
 
+    gzip_log="${sample_id}.fastq_gzip_test.log"
+    if ! gzip -t "!{fastq}" >"$gzip_log" 2>&1; then
+        echo "Input FASTQ failed gzip integrity check before AMPLIGONE: !{fastq}"
+        cat "$gzip_log"
+        exit 1
+    fi
+
     run_ampligone() {
         local ref="$1"
         local pri="$2"
