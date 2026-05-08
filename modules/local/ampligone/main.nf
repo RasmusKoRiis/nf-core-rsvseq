@@ -70,6 +70,7 @@ process AMPLIGONE {
 
     attempted=0
     last_error=""
+    failed_logs=()
 
     if [[ -n "$primer_scheme_value" ]]; then
         for scheme_subdir in "${scheme_candidates[@]}"; do
@@ -108,6 +109,7 @@ process AMPLIGONE {
                 exit 0
             fi
             last_error="ampligone failed for scheme ${scheme_subdir} (see ${sample_id}.ampligone_${scheme_subdir}.log)"
+            failed_logs+=("${scheme_subdir}:${sample_id}.ampligone_${scheme_subdir}.log")
         done
     else
         for legacy_subdir in "${legacy_candidates[@]}"; do
@@ -120,6 +122,7 @@ process AMPLIGONE {
                 exit 0
             fi
             last_error="ampligone failed for legacy ${legacy_subdir} (see ${sample_id}.ampligone_${legacy_subdir}.log)"
+            failed_logs+=("${legacy_subdir}:${sample_id}.ampligone_${legacy_subdir}.log")
         done
     fi
 
@@ -129,6 +132,19 @@ process AMPLIGONE {
     fi
 
     echo "${last_error:-All candidate ampligone runs failed for $sample_id}"
+    echo "All candidate ampligone runs failed for sample $sample_id after $attempted attempt(s)."
+    for failed_log in "${failed_logs[@]}"; do
+        mode="${failed_log%%:*}"
+        log_file="${failed_log#*:}"
+        echo "--- ampligone log for ${mode} (${log_file}) ---"
+        if [[ -s "$log_file" ]]; then
+            tail -n 80 "$log_file"
+        elif [[ -f "$log_file" ]]; then
+            echo "Log file is empty."
+        else
+            echo "Log file was not created."
+        fi
+    done
     exit 1
     '''
 }
