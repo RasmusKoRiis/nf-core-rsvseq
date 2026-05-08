@@ -33,7 +33,7 @@ process CAT_FASTQ {
                 if gzip -t "\$read" >> ${prefix}.skipped_fastq.log 2>&1; then
                     valid_reads+=("\$read")
                 else
-                    echo "Skipping corrupt FASTQ for ${prefix}: \$read" | tee -a ${prefix}.skipped_fastq.log >&2
+                    echo "Skipping corrupt FASTQ for ${prefix}: \$read -> \$(readlink -f "\$read")" | tee -a ${prefix}.skipped_fastq.log >&2
                 fi
             done
 
@@ -79,7 +79,7 @@ process CAT_FASTQ {
                     valid_read1+=("\$r1")
                     valid_read2+=("\$r2")
                 else
-                    echo "Skipping corrupt FASTQ pair for ${prefix}: \$r1 / \$r2" | tee -a ${prefix}.skipped_fastq.log >&2
+                    echo "Skipping corrupt FASTQ pair for ${prefix}: \$r1 -> \$(readlink -f "\$r1") / \$r2 -> \$(readlink -f "\$r2")" | tee -a ${prefix}.skipped_fastq.log >&2
                     cat "\$r1_log" "\$r2_log" >> ${prefix}.skipped_fastq.log
                 fi
                 rm -f "\$r1_log" "\$r2_log"
