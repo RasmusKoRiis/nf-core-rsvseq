@@ -25,10 +25,12 @@ process CAT_FASTQ {
         if (readList.size >= 1) {
             """
             cat ${readList.join(' ')} > ${prefix}.merged.fastq.gz
+            gzip -t ${prefix}.merged.fastq.gz
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
+                gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^gzip //; s/ .*\$//')
             END_VERSIONS
             """
         }
@@ -40,10 +42,13 @@ process CAT_FASTQ {
             """
             cat ${read1.join(' ')} > ${prefix}_1.merged.fastq.gz
             cat ${read2.join(' ')} > ${prefix}_2.merged.fastq.gz
+            gzip -t ${prefix}_1.merged.fastq.gz
+            gzip -t ${prefix}_2.merged.fastq.gz
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
+                gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^gzip //; s/ .*\$//')
             END_VERSIONS
             """
         }
