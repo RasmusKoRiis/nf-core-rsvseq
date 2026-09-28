@@ -57,6 +57,7 @@ include { IRMA                        } from '../modules/local/irma/main'
 include { NEXTCLADE                   } from '../modules/local/nextclade/main'
 include { CSV_CONVERSION              } from '../modules/local/csv_conversion/main'
 include { REPORT                      } from '../modules/local/report/main'
+include { PRIMER_CHECK_RUN             } from '../subworkflows/local/primer_check/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,6 +175,15 @@ workflow RSVSEQ {
     NEXTCLADE (
         IRMA.out.amended_consensus
     )
+
+    if (params.primer_check) {
+        PRIMER_CHECK_RUN(
+            IRMA.out.amended_consensus.map { meta, fasta -> tuple(meta, fasta, []) },
+            [virus: 'RSV', run_id: params.runid, assays: ['pcr', 'ngs'],
+             ngs_dir: params.primer_check_ngs_dir ?: params.primer_schemes_dir,
+             ngs_scheme: params.primer_scheme ?: '', offline: false]
+        )
+    }
 
     //
     // MODULE: NEXTCLADE CONVERSION
