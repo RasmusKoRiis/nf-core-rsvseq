@@ -147,7 +147,6 @@ workflow RSVSEQ {
         Channel.value(params.primer_scheme)
     )
 
-
     //
     // MODULE: CHOPPER
     //  
@@ -155,7 +154,6 @@ workflow RSVSEQ {
     CHOPPER (
         AMPLIGONE.out.primertrimmedfastq
     )
-
 
     
     //
@@ -167,7 +165,6 @@ workflow RSVSEQ {
         ch_irma_external_config
     )
 
-
     //
     // MODULE: NEXTCLADE
     //
@@ -175,15 +172,6 @@ workflow RSVSEQ {
     NEXTCLADE (
         IRMA.out.amended_consensus
     )
-
-    if (params.primer_check) {
-        PRIMER_CHECK_RUN(
-            IRMA.out.amended_consensus.map { meta, fasta -> tuple(meta, fasta, []) },
-            [virus: 'RSV', run_id: params.runid, assays: ['pcr', 'ngs'],
-             ngs_dir: params.primer_check_ngs_dir ?: params.primer_schemes_dir,
-             ngs_scheme: params.primer_scheme ?: '', offline: false]
-        )
-    }
 
     //
     // MODULE: NEXTCLADE CONVERSION
@@ -212,6 +200,16 @@ workflow RSVSEQ {
         file(params.input),
         IRMA.out.fasta_report.collect()
     )
+
+    if (params.primer_check) {
+        PRIMER_CHECK_RUN(
+            REPORT.out.multiple_fasta,
+            IRMA.out.amended_consensus.map { meta, fasta -> tuple(meta, fasta, []) },
+            [virus: 'RSV', run_id: params.runid, assays: ['pcr', 'ngs'],
+             ngs_dir: params.primer_check_ngs_dir ?: params.primer_schemes_dir,
+             ngs_scheme: params.primer_scheme ?: '', offline: false]
+        )
+    }
 
 
     //
